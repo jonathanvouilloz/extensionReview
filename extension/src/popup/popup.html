@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Feedback Tool</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#667eea"/>
+          <path d="M8 12h8M8 8h8M8 16h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <h1>Visual Feedback</h1>
+      </div>
+    </header>
+
+    <!-- Contenu principal -->
+    <main class="popup-content">
+      <!-- État initial - pas de projet -->
+      <div id="no-project-state" class="state-section">
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="20" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+            <path d="M24 16v8M24 32v0" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <h2>Aucun projet connecté</h2>
+          <p>Entrez un code projet pour commencer à donner du feedback</p>
+          
+          <form id="project-form" class="project-form">
+            <div class="input-group">
+              <input 
+                type="text" 
+                id="project-code" 
+                placeholder="ABC-123-XYZ"
+                pattern="[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{3}"
+                required
+              >
+              <button type="submit" id="connect-btn">
+                <span class="btn-text">Se connecter</span>
+                <div class="btn-loader hidden">⏳</div>
+              </button>
+            </div>
+            <div id="error-message" class="error-message hidden"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- État connecté -->
+      <div id="connected-state" class="state-section hidden">
+        <div class="project-info">
+          <div class="project-details">
+            <h3 id="project-name">Nom du projet</h3>
+            <p class="project-code">Code: <span id="current-code">ABC-123-XYZ</span></p>
+            <p class="project-expires">Expire: <span id="expire-date">31/12/2024</span></p>
+          </div>
+          <button id="disconnect-btn" class="disconnect-btn" title="Déconnecter">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="action-buttons">
+          <button id="capture-btn" class="primary-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect x="2" y="3" width="12" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="8" cy="7" r="2" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M6 1h4v1H6z" fill="currentColor"/>
+            </svg>
+            Capturer et commenter
+          </button>
+          
+          <button id="quick-comment-btn" class="secondary-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 6h12M2 10h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Commentaire rapide
+          </button>
+        </div>
+
+        <!-- Commentaires récents -->
+        <div class="recent-comments">
+          <h4>Commentaires récents</h4>
+          <div id="comments-list" class="comments-list">
+            <!-- Les commentaires seront ajoutés dynamiquement -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Paramètres -->
+      <div id="settings-state" class="state-section hidden">
+        <div class="settings-content">
+          <h3>Paramètres</h3>
+          
+          <div class="setting-group">
+            <label for="capture-mode">Mode de capture</label>
+            <select id="capture-mode">
+              <option value="overlay">Overlay uniquement</option>
+              <option value="keyboard">Raccourci clavier</option>
+              <option value="both">Les deux</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label for="overlay-position">Position de l'overlay</label>
+            <select id="overlay-position">
+              <option value="top-right">Haut droite</option>
+              <option value="top-left">Haut gauche</option>
+              <option value="bottom-right">Bas droite</option>
+              <option value="bottom-left">Bas gauche</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label for="api-endpoint">API Endpoint</label>
+            <input type="url" id="api-endpoint" placeholder="https://visual-feedback-api.workers.dev">
+          </div>
+
+          <button id="save-settings-btn" class="primary-btn">Sauvegarder</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="popup-footer">
+      <button id="settings-btn" class="icon-btn" title="Paramètres">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 1v2M8 13v2M15 8h-2M3 8H1M13.36 2.64l-1.42 1.42M4.06 11.94l-1.42 1.42M13.36 13.36l-1.42-1.42M4.06 4.06L2.64 2.64" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      
+      <div class="footer-info">
+        <span class="version">v1.0.0</span>
+      </div>
+
+      <button id="help-btn" class="icon-btn" title="Aide">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M6 6c0-1.1.9-2 2-2s2 .9 2 2c0 .8-.5 1.5-1.2 1.8L8 9M8 12v0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html> 

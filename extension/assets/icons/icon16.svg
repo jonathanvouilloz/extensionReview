@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+    <defs>
+      <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+      </linearGradient>
+    </defs>
+    
+    <!-- Fond avec gradient -->
+    <rect width="16" height="16" rx="2" fill="url(#grad)"/>
+    
+    <!-- Icône simple de commentaire -->
+    <rect x="4" y="5.333333333333333" width="8" height="5.333333333333333" rx="1.3333333333333333" fill="white" opacity="0.9"/>
+    <rect x="5" y="6.666666666666666" width="6" height="1" rx="0.5" fill="#667eea"/>
+    <rect x="5" y="8" width="5.333333333333334" height="0.8" rx="0.4" fill="#667eea" opacity="0.7"/>
+    
+    <!-- Point d'exclamation -->
+    <circle cx="12" cy="5.333333333333333" r="1.3333333333333333" fill="#ff6b6b"/>
+    <rect x="11.5" y="4.333333333333333" width="1" height="2" fill="white"/>
+    <circle cx="12" cy="6" r="0.3333333333333333" fill="white"/>
+  </svg>
