@@ -1,0 +1,5 @@
+---
+description: When an agent need to test something
+alwaysApply: false
+---
+Quand tu dois tester, demande à l'utilisateur de le faire pour toi en lui donnant la commande à lancer.

@@ -1,0 +1,172 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Tests et Quality Gates
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Type checking
+      run: npm run type-check
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Run tests with coverage
+      run: npm run test:coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage/coverage-final.json
+        fail_ci_if_error: false
+    
+    - name: Check coverage thresholds
+      run: |
+        echo "Vérification des seuils de couverture..."
+        npx vitest run --coverage --reporter=verbose
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run security audit
+      run: npm audit --audit-level=moderate
+      continue-on-error: true
+    
+    - name: Check for vulnerabilities
+      run: |
+        echo "Vérification des vulnérabilités de sécurité..."
+        npm audit --audit-level=high
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Deploy to staging
+      run: npm run deploy:staging
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    
+    - name: Staging deployment notification
+      run: |
+        echo "✅ Déploiement staging réussi"
+        echo "URL: https://visual-feedback-api-staging.workers.dev"
+        
+  deploy-production:
+    name: Deploy to Production
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Final security check
+      run: npm audit --audit-level=high
+    
+    - name: Deploy to production
+      run: npm run deploy:production
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    
+    - name: Production deployment notification
+      run: |
+        echo "🚀 Déploiement production réussi"
+        echo "URL: https://visual-feedback-api.workers.dev"
+    
+    - name: Create release tag
+      if: success()
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag -a "v$(date +'%Y.%m.%d')-$(git rev-parse --short HEAD)" -m "Production release $(date +'%Y-%m-%d %H:%M:%S')"
+        git push origin --tags
+
+  test-endpoints:
+    name: Test API Endpoints
+    needs: [deploy-staging]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Test staging endpoints
+      run: |
+        echo "🧪 Test des endpoints staging..."
+        
+        # Test health endpoint
+        curl -f https://visual-feedback-api-staging.workers.dev/health || exit 1
+        
+        # Test API info endpoint
+        curl -f https://visual-feedback-api-staging.workers.dev/api || exit 1
+        
+        echo "✅ Tous les endpoints staging fonctionnent"
+    
+    - name: Run middleware security tests
+      run: |
+        echo "🔒 Test des middlewares de sécurité..."
+        node test-middleware.js
+      env:
+        BASE_URL: "https://visual-feedback-api-staging.workers.dev" 
